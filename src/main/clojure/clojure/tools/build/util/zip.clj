@@ -16,7 +16,7 @@
     [java.nio.file Files LinkOption]
     [java.nio.file.attribute BasicFileAttributes FileTime]
     [java.util.zip ZipFile ZipInputStream ZipOutputStream ZipEntry]
-    [java.util.jar Manifest Attributes$Name]))
+    [java.util.jar Manifest Attributes$Name JarFile]))
 
 (set! *warn-on-reflection* true)
 
