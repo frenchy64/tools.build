@@ -12,7 +12,7 @@
     [clojure.tools.build.util.file :as file]
     [clojure.string :as str])
   (:import
-    [java.io File InputStream OutputStream]
+    [java.io File InputStream OutputStream BufferedOutputStream]
     [java.nio.file Files LinkOption]
     [java.nio.file.attribute BasicFileAttributes FileTime]
     [java.util.zip ZipFile ZipInputStream ZipOutputStream ZipEntry]
