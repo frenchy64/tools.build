@@ -297,7 +297,7 @@
               (.exists (jio/file working-dir "META-INF" "versions")) (assoc "Multi-Release" "true"))
             mf-attr-strs))
         (file/ensure-dir (.getParent uber-file))
-        (with-open [jos (JarOutputStream. (jio/output-stream uber-file) manifest)]
-          (zip/copy-to-zip jos working-dir)))
+        (with-open [jos (JarOutputStream. (jio/output-stream uber-file))]
+          (zip/copy-to-jar jos manifest working-dir)))
       (finally
         (file/delete working-dir)))))

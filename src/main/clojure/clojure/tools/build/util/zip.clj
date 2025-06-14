@@ -53,6 +53,22 @@
                 (add-zip-entry jos rel-path f))))
       files)))
 
+(defn copy-to-jar
+  [^JarOutputStream jos ^Manifest manifest ^File root]
+  ;; copied from JarOutputStream(OutputStream out, Manifest man) constructor
+  (let [e (doto (ZipEntry. JarFile/MANIFEST_NAME)
+            (.setLastModifiedTime (or (some-> "SOURCE_DATE_EPOCH"
+                                              System/getenv
+                                              parse-long
+                                              (* 1000)
+                                              FileTime/fromMillis)
+                                      ;;TODO
+                                      (FileTime/fromMillis 0))))]
+    (.putNextEntry jos e)
+    (.write manifest (BufferedOutputStream. jos))
+    (.closeEntry jos))
+  (zip/copy-to-zip jos root))
+
 (defn fill-manifest!
   [^Manifest manifest props]
   (let [attrs (.getMainAttributes manifest)]
