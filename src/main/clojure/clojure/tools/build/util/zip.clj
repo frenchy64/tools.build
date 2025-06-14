@@ -20,7 +20,7 @@
 
 (set! *warn-on-reflection* true)
 
-(def *source-date-epoch* nil)
+(def ^:dynamic *source-date-epoch* nil)
 
 (defn- add-zip-entry
   [^ZipOutputStream output-stream ^String path ^File file]
