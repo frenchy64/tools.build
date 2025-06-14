@@ -67,7 +67,7 @@
     (.putNextEntry jos e)
     (.write manifest (BufferedOutputStream. jos))
     (.closeEntry jos))
-  (zip/copy-to-zip jos root))
+  (copy-to-zip jos root))
 
 (defn fill-manifest!
   [^Manifest manifest props]
