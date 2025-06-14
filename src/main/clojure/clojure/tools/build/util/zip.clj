@@ -20,6 +20,8 @@
 
 (set! *warn-on-reflection* true)
 
+(def *source-date-epoch* nil)
+
 (defn- add-zip-entry
   [^ZipOutputStream output-stream ^String path ^File file]
   (let [dir (.isDirectory file)
@@ -29,7 +31,10 @@
         entry (doto (ZipEntry. path)
                 ;(.setSize (.size attrs))
                 ;(.setLastAccessTime (.lastAccessTime attrs))
-                (.setLastModifiedTime (or (some-> "SOURCE_DATE_EPOCH"
+                (.setLastModifiedTime (or (some-> *source-date-epoch*
+                                                  (* 1000)
+                                                  FileTime/fromMillis)
+                                          (some-> "SOURCE_DATE_EPOCH"
                                                   System/getenv
                                                   parse-long
                                                   (* 1000)
@@ -57,7 +62,10 @@
   [^ZipOutputStream jos ^Manifest manifest ^File root]
   ;; copied from JarOutputStream(OutputStream out, Manifest man) constructor
   (let [e (doto (ZipEntry. JarFile/MANIFEST_NAME)
-            (.setLastModifiedTime (or (some-> "SOURCE_DATE_EPOCH"
+            (.setLastModifiedTime (or (some-> *source-date-epoch*
+                                              (* 1000)
+                                              FileTime/fromMillis)
+                                      (some-> "SOURCE_DATE_EPOCH"
                                               System/getenv
                                               parse-long
                                               (* 1000)
