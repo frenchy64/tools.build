@@ -287,11 +287,12 @@
           nil ;; initial state, usable by handlers if needed
           (assoc (remove-optional libs) nil {:paths [compile-dir]}))
         (zip/fill-manifest! manifest
-          (merge
+          (into
             (cond->
-              {"Manifest-Version" "1.0"
-               "Created-By" "org.clojure/tools.build"
-               "Build-Jdk-Spec" (System/getProperty "java.specification.version")}
+              (sorted-map
+                "Manifest-Version" "1.0"
+                "Created-By" "org.clojure/tools.build"
+                "Build-Jdk-Spec" (System/getProperty "java.specification.version"))
               main (assoc "Main-Class" (str/replace (str main) \- \_))
               (.exists (jio/file working-dir "META-INF" "versions")) (assoc "Multi-Release" "true"))
             mf-attr-strs))

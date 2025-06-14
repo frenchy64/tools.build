@@ -29,7 +29,12 @@
         entry (doto (ZipEntry. path)
                 ;(.setSize (.size attrs))
                 ;(.setLastAccessTime (.lastAccessTime attrs))
-                (.setLastModifiedTime (.lastModifiedTime attrs)))]
+                (.setLastModifiedTime (or (some-> "SOURCE_DATE_EPOCH"
+                                                  System/getenv
+                                                  parse-long
+                                                  (* 1000)
+                                                  FileTime/fromMillis)
+                                          (.lastModifiedTime attrs))))]
     (.putNextEntry output-stream entry)
     (when-not dir
       (with-open [fis (jio/input-stream file)]
@@ -89,8 +94,8 @@
       (with-open [zis (ZipInputStream. (jio/input-stream zip-file))]
         (loop []
           (if-let [entry (.getNextEntry zis)]
-            ;(println "entry:" (.getName entry) (.isDirectory entry))
             (let [out-file (jio/file target-dir (.getName entry))]
+              ;(println "entry:" (.getName entry) (.isDirectory entry))
               (jio/make-parents out-file)
               (when-not (.isDirectory entry)
                 (with-open [output (jio/output-stream out-file)]

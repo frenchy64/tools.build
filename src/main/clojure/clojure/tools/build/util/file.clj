@@ -36,7 +36,7 @@
                                         (mapv #(.toFile ^Path %) entries)))
                 collect? (and (if is-dir dirs true) (collect file))]
             (recur (into (pop queue) children) (if collect? (conj collected file) collected)))
-          (when (seq collected) collected))))))
+          (not-empty collected))))))
 
 (defn suffixes
   "Returns a predicate matching suffixes"
