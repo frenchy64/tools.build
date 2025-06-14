@@ -14,7 +14,7 @@
   (:import
     [java.io File InputStream OutputStream]
     [java.nio.file Files LinkOption]
-    [java.nio.file.attribute BasicFileAttributes]
+    [java.nio.file.attribute BasicFileAttributes FileTime]
     [java.util.zip ZipFile ZipInputStream ZipOutputStream ZipEntry]
     [java.util.jar Manifest Attributes$Name]))
 
