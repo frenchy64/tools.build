@@ -54,7 +54,7 @@
       files)))
 
 (defn copy-to-jar
-  [^JarOutputStream jos ^Manifest manifest ^File root]
+  [^ZipOutputStream jos ^Manifest manifest ^File root]
   ;; copied from JarOutputStream(OutputStream out, Manifest man) constructor
   (let [e (doto (ZipEntry. JarFile/MANIFEST_NAME)
             (.setLastModifiedTime (or (some-> "SOURCE_DATE_EPOCH"
