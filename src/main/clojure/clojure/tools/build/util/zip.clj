@@ -12,13 +12,15 @@
     [clojure.tools.build.util.file :as file]
     [clojure.string :as str])
   (:import
-    [java.io File InputStream OutputStream]
+    [java.io File InputStream OutputStream BufferedOutputStream]
     [java.nio.file Files LinkOption]
-    [java.nio.file.attribute BasicFileAttributes]
+    [java.nio.file.attribute BasicFileAttributes FileTime]
     [java.util.zip ZipFile ZipInputStream ZipOutputStream ZipEntry]
-    [java.util.jar Manifest Attributes$Name]))
+    [java.util.jar Manifest Attributes$Name JarFile]))
 
 (set! *warn-on-reflection* true)
+
+(def ^:dynamic *source-date-epoch* nil)
 
 (defn- add-zip-entry
   [^ZipOutputStream output-stream ^String path ^File file]
@@ -29,7 +31,15 @@
         entry (doto (ZipEntry. path)
                 ;(.setSize (.size attrs))
                 ;(.setLastAccessTime (.lastAccessTime attrs))
-                (.setLastModifiedTime (.lastModifiedTime attrs)))]
+                (.setLastModifiedTime (or (some-> *source-date-epoch*
+                                                  (* 1000)
+                                                  FileTime/fromMillis)
+                                          (some-> "SOURCE_DATE_EPOCH"
+                                                  System/getenv
+                                                  parse-long
+                                                  (* 1000)
+                                                  FileTime/fromMillis)
+                                          (.lastModifiedTime attrs))))]
     (.putNextEntry output-stream entry)
     (when-not dir
       (with-open [fis (jio/input-stream file)]
@@ -47,6 +57,25 @@
                 ;(println "  Adding" rel-path)
                 (add-zip-entry jos rel-path f))))
       files)))
+
+(defn copy-to-jar
+  [^ZipOutputStream jos ^Manifest manifest ^File root]
+  ;; copied from JarOutputStream(OutputStream out, Manifest man) constructor
+  (let [e (doto (ZipEntry. JarFile/MANIFEST_NAME)
+            (.setLastModifiedTime (or (some-> *source-date-epoch*
+                                              (* 1000)
+                                              FileTime/fromMillis)
+                                      (some-> "SOURCE_DATE_EPOCH"
+                                              System/getenv
+                                              parse-long
+                                              (* 1000)
+                                              FileTime/fromMillis)
+                                      ;;TODO
+                                      (FileTime/fromMillis 0))))]
+    (.putNextEntry jos e)
+    (.write manifest (BufferedOutputStream. jos))
+    (.closeEntry jos))
+  (copy-to-zip jos root))
 
 (defn fill-manifest!
   [^Manifest manifest props]
@@ -89,8 +118,8 @@
       (with-open [zis (ZipInputStream. (jio/input-stream zip-file))]
         (loop []
           (if-let [entry (.getNextEntry zis)]
-            ;(println "entry:" (.getName entry) (.isDirectory entry))
             (let [out-file (jio/file target-dir (.getName entry))]
+              ;(println "entry:" (.getName entry) (.isDirectory entry))
               (jio/make-parents out-file)
               (when-not (.isDirectory entry)
                 (with-open [output (jio/output-stream out-file)]

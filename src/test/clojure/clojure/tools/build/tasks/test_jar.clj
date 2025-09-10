@@ -11,10 +11,12 @@
     [clojure.string :as str]
     [clojure.test :refer :all]
     [clojure.java.io :as jio]
+    [clojure.java.shell :as sh]
     [clojure.tools.build.api :as api]
     [clojure.tools.build.test-util :refer :all]
     [clojure.tools.build.util.zip :as zip])
-  (:import [java.util.zip ZipFile ZipEntry]))
+  (:import [java.security MessageDigest]
+           [java.util.zip ZipFile ZipEntry]))
 
 (defn slurp-manifest
   [z]
@@ -24,6 +26,10 @@
         (when ze
           (slurp (.getInputStream zip ze)))))))
 
+(defn sha256 [file]
+  (let [digest (.digest (MessageDigest/getInstance "SHA-256") (.getBytes (slurp file) "UTF-8"))]
+    (apply str (map (partial format "%02x") digest))))
+
 (deftest test-jar
   (let [jar-path "target/output.jar"]
     (with-test-dir "test-data/p1"
@@ -31,6 +37,8 @@
       (api/jar {:class-dir "src"
                 :jar-file jar-path})
       (is (true? (.exists (jio/file (project-path jar-path)))))
+      (is (= "????????????????????????????????????????????????????????????????"
+             (sha256 (jio/file (project-path jar-path)))))
       (is (= #{"META-INF/MANIFEST.MF" "foo/" "foo/bar.clj"}
             (set (map :name (zip/list-zip (project-path jar-path)))))))))
 
@@ -42,6 +50,8 @@
                 :jar-file jar-path
                 :manifest {"Abc" 100}})
       (is (true? (.exists (jio/file (project-path jar-path)))))
+      (is (= "????????????????????????????????????????????????????????????????"
+             (sha256 (jio/file (project-path jar-path)))))
       (is (= #{"META-INF/MANIFEST.MF" "foo/" "foo/bar.clj"}
             (set (map :name (zip/list-zip (project-path jar-path))))))
       (let [manifest-out (slurp-manifest (project-path jar-path))]

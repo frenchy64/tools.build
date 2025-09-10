@@ -24,12 +24,13 @@
     (file/ensure-dir (.getParent jar-file))
     (let [manifest (Manifest.)]
       (zip/fill-manifest! manifest
-        (merge
+        (into
           (cond->
-            {"Manifest-Version" "1.0"
-             "Created-By" "org.clojure/tools.build"
-             "Build-Jdk-Spec" (System/getProperty "java.specification.version")}
+            (sorted-map
+              "Manifest-Version" "1.0"
+              "Created-By" "org.clojure/tools.build"
+              "Build-Jdk-Spec" (System/getProperty "java.specification.version"))
             main (assoc "Main-Class" (str/replace (str main) \- \_)))
           mf-attr-strs))
-      (with-open [jos (JarOutputStream. (jio/output-stream jar-file) manifest)]
-        (zip/copy-to-zip jos class-dir-file)))))
+      (with-open [jos (JarOutputStream. (jio/output-stream jar-file))]
+        (zip/copy-to-jar jos manifest class-dir-file)))))

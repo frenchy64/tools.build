@@ -287,16 +287,17 @@
           nil ;; initial state, usable by handlers if needed
           (assoc (remove-optional libs) nil {:paths [compile-dir]}))
         (zip/fill-manifest! manifest
-          (merge
+          (into
             (cond->
-              {"Manifest-Version" "1.0"
-               "Created-By" "org.clojure/tools.build"
-               "Build-Jdk-Spec" (System/getProperty "java.specification.version")}
+              (sorted-map
+                "Manifest-Version" "1.0"
+                "Created-By" "org.clojure/tools.build"
+                "Build-Jdk-Spec" (System/getProperty "java.specification.version"))
               main (assoc "Main-Class" (str/replace (str main) \- \_))
               (.exists (jio/file working-dir "META-INF" "versions")) (assoc "Multi-Release" "true"))
             mf-attr-strs))
         (file/ensure-dir (.getParent uber-file))
-        (with-open [jos (JarOutputStream. (jio/output-stream uber-file) manifest)]
-          (zip/copy-to-zip jos working-dir)))
+        (with-open [jos (JarOutputStream. (jio/output-stream uber-file))]
+          (zip/copy-to-jar jos manifest working-dir)))
       (finally
         (file/delete working-dir)))))
